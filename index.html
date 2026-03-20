@@ -476,6 +476,101 @@
             display: none;
         }
 
+        /* ── Landscape video card ── */
+        .video-grid-landscape {
+            max-width: 1200px;
+            margin: 1.5rem auto 0;
+        }
+
+        .video-card-landscape {
+            position: relative;
+            /* 16:9 landscape aspect ratio */
+            aspect-ratio: 16/9;
+            background: #1a1a1a;
+            border-radius: 10px;
+            overflow: hidden;
+            cursor: pointer;
+            opacity: 0;
+            transform: translateY(50px);
+            transition: all 0.5s ease, transform 0.3s ease;
+            width: 100%;
+        }
+
+        .video-card-landscape.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .video-card-landscape:hover {
+            transform: translateY(-6px) scale(1.01);
+        }
+
+        .video-card-landscape .video-thumbnail {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+            display: block;
+        }
+
+        .video-card-landscape:hover .video-thumbnail {
+            transform: scale(1.05);
+        }
+
+        .video-card-landscape .video-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg, transparent 50%, rgba(0,0,0,0.8) 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 2rem;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .video-card-landscape:hover .video-overlay {
+            opacity: 1;
+        }
+
+        .video-card-landscape .play-button {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80px;
+            height: 80px;
+            background: rgba(74, 222, 128, 0.9);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.3s ease;
+            z-index: 3;
+        }
+
+        .video-card-landscape .play-button::after {
+            content: '';
+            width: 0;
+            height: 0;
+            border-left: 24px solid #fff;
+            border-top: 14px solid transparent;
+            border-bottom: 14px solid transparent;
+            margin-left: 6px;
+        }
+
+        .video-card-landscape:hover .play-button {
+            transform: translate(-50%, -50%) scale(1.1);
+            background: #4ade80;
+        }
+
+        .video-card-landscape .play-button.playing {
+            display: none;
+        }
+
         /* Contact Section */
         .contact-section {
             padding: 8rem 5%;
@@ -929,30 +1024,32 @@
     <!-- Video Section -->
     <section class="video-section" id="videos">
     <h2 class="section-title">Video</h2>
+
+        <!-- 3 Portrait Cards -->
         <div class="video-grid">
-            <!-- Use actual MP4 files from the img folder. Spaces are percent-encoded in the src. -->
             <div class="video-card">
-                <video class="video-thumbnail" preload="metadata" src="assest/irai.mp4" muted></video>
+                <video class="video-thumbnail" preload="metadata" src="assest/onam.mp4" muted></video>
                 <div class="play-button"></div>
-               
             </div>
             <div class="video-card">
                 <video class="video-thumbnail" preload="metadata" src="assest/V70.mp4" muted></video>
                 <div class="play-button"></div>
-               
             </div>
             <div class="video-card">
                 <video class="video-thumbnail" preload="metadata" src="assest/Vertise AD.mp4" muted></video>
                 <div class="play-button"></div>
-               
             </div>
-
-
-          
-            
-
-            <!-- If you add another MP4 later, duplicate a video-card and set the src accordingly. -->
         </div>
+
+        <!-- 1 Landscape Card below the 3 portrait cards -->
+        <div class="video-grid-landscape">
+            <div class="video-card-landscape">
+                <video class="video-thumbnail" preload="metadata" src="assest/saas intr final.mp4" muted></video>
+                <div class="play-button"></div>
+                <div class="video-overlay"></div>
+            </div>
+        </div>
+
     </section>
 
     <!-- Contact Section -->
@@ -1026,7 +1123,7 @@
         }, observerOptions);
 
         // Observe elements
-        document.querySelectorAll('.section-title, .video-card, .about-content, .about-image, .contact-info, .contact-form-container').forEach(el => {
+        document.querySelectorAll('.section-title, .video-card, .video-card-landscape, .about-content, .about-image, .contact-info, .contact-form-container').forEach(el => {
             observer.observe(el);
         });
 
@@ -1058,7 +1155,7 @@
 
         // Video play/pause behavior: click a card to play/pause. Only one video plays at a time.
         (function setupVideoCards() {
-            const cards = document.querySelectorAll('.video-card');
+            const cards = document.querySelectorAll('.video-card, .video-card-landscape');
             let current = null; // currently playing video
 
             cards.forEach(card => {
@@ -1067,23 +1164,14 @@
 
                 if (!video) return;
 
-                // Clicking the card toggles playback (but avoid double-handling when clicking native controls)
                 card.addEventListener('click', (e) => {
-                    // If the click originated from a native control, skip (controls are part of the video element)
-                    // A simple heuristic: if the clicked element is a control inside video (tagName === 'VIDEO'), allow toggle.
-                    // We'll still toggle on any click inside the card for simplicity.
                     if (video.paused) {
-                        // pause previously playing video
                         if (current && current !== video) {
                             current.pause();
                         }
-                        // Ensure sound is enabled when user explicitly starts playback
                         try {
                             video.muted = false;
-                        } catch (e) {
-                            // some browsers may prevent programmatic unmute until interaction — click is an interaction
-                        }
-                        // Try to play. If play() is blocked, enable native controls as fallback
+                        } catch (e) {}
                         video.play().catch(() => {
                             video.controls = true;
                         });
@@ -1093,7 +1181,6 @@
                     }
                 });
 
-                // Update play button when video plays/pauses
                 video.addEventListener('play', () => {
                     if (playBtn) playBtn.classList.add('playing');
                 });
@@ -1101,7 +1188,6 @@
                     if (playBtn) playBtn.classList.remove('playing');
                 });
 
-                // When video ends, reset current
                 video.addEventListener('ended', () => {
                     if (current === video) current = null;
                     video.currentTime = 0;
